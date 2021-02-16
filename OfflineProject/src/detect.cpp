@@ -106,11 +106,11 @@ int main()
         return (-1);
     }
     shape_predictor sp;
-    deserialize("../Model/shape_predictor_68_face_landmarks.dat") >> sp;
+    deserialize("../../Model/shape_predictor_68_face_landmarks.dat") >> sp;
     anet_type net;
-    deserialize("../Model/dlib_face_recognition_resnet_model_v1.dat") >> net;
+    deserialize("../../Model/dlib_face_recognition_resnet_model_v1.dat") >> net;
     student temp_std;
-    UltraFace ultraface("../Model/RFB-320.bin", "../Model/RFB-320.param", 426, 240, 2, 0.82);
+    UltraFace ultraface("../../Model/RFB-320.bin", "../../Model/RFB-320.param", 426, 240, 2, 0.82);
     std::vector<matrix<rgb_pixel>> faces;
     cv::Mat img;
     cv::namedWindow("Detect", cv::WINDOW_AUTOSIZE);
