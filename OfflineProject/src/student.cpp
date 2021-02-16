@@ -1,4 +1,4 @@
-#include "student.hpp"
+#include "../header/student.hpp"
 student::student()
 {}
 student::student(std::string stdname,std::string stdid,int stdcheck,dlib::matrix<float, 0, 1> sample)

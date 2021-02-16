@@ -10,7 +10,7 @@
 #include <dlib/image_processing.h>
 #include <experimental/filesystem>
 #include <map>
-#include "student.hpp"
+#include "../header/student.hpp"
 #include <string.h>
 #include <fstream>
 
@@ -82,7 +82,6 @@ int main()
     std::vector<std::string> std_list;
     if (fs::exists(std_lst_path))
     {
-
         f.open(std_lst_path, ios::in);
         while (!f.eof())
         {
@@ -114,7 +113,6 @@ int main()
         std_list.push_back(temp_student.student_id);
         std_list.push_back(temp_student.student_name);
         std_list.push_back(temp_student.dat_path);
-        //std::cout<<"NO. Nothing here!"<<std::endl;
     }
     f.open(std_lst_path, ios::out);
     for (int i = 0; i < std_list.size(); i++)
@@ -122,8 +120,6 @@ int main()
         f << std_list[i] + "\n";
     }
     f.close();
-
-    
     std::map<std::string, dlib::matrix<float,0,1>> data_faces;
     if (!fs::exists(temp_student.dat_path))
     {
@@ -133,28 +129,19 @@ int main()
     {
         deserialize(temp_student.dat_path) >> data_faces;
     }
-
     cv::VideoCapture cap(0);
     if(!cap.isOpened()) {
 	std::cout<<"Failed to open camera."<<std::endl;
 	return (-1);
     }
-
     cv::Mat img;
-
-     frontal_face_detector detector = get_frontal_face_detector();
-    // We will also use a face landmarking model to align faces to a standard pose:  (see face_landmark_detection_ex.cpp for an introduction)
+    frontal_face_detector detector = get_frontal_face_detector();
     shape_predictor sp;
-    deserialize("/home/nhan/data/shape_predictor_68_face_landmarks.dat") >> sp;
-    // And finally we load the DNN responsible for face recognition.
+    deserialize("../Model/shape_predictor_68_face_landmarks.dat") >> sp;
     anet_type net;
-    deserialize("/home/nhan/data/dlib_face_recognition_resnet_model_v1.dat") >> net;
-
-
-
+    deserialize("../Model/dlib_face_recognition_resnet_model_v1.dat") >> net;
     image_window win;
     std::vector<matrix<rgb_pixel>> faces;
-
     int cout_img = 0;
     std::vector<matrix<rgb_pixel>> array_face;
     while(true)
@@ -164,38 +151,30 @@ int main()
 		break;
 	    }
 	    cv::resize(img,img,cv::Size(800,480));
-        
         cv_image<bgr_pixel> cimg(img);
-
         matrix<rgb_pixel> matrix;
         assign_image(matrix, cimg);
         win.clear_overlay();
         win.set_image(matrix);
         faces.clear();
-
         for (auto face : detector(matrix))
         {
             auto shape = sp(matrix, face);
             dlib::matrix<rgb_pixel> face_chip;
             extract_image_chip(matrix, get_face_chip_details(shape,150,0.25), face_chip);
             faces.push_back(move(face_chip));
-            // Also put some boxes on the faces so we can see that the detector is finding
-            // them.
             win.add_overlay(face);
         }
-
         if (faces.size() == 0)
         {
             cout << "No faces found in image!" << endl;
             continue;
         }
-
         cout_img++;
         cout << cout_img <<endl;
         if (cout_img == 100)
             break;
         array_face.push_back(faces[0]);
-        
     }
     data_faces.erase(temp_student.student_id);
     data_faces.insert(std::pair<std::string, dlib::matrix<float,0,1>>(temp_student.student_id,mean(mat(net(array_face)))));
@@ -203,7 +182,5 @@ int main()
     serialize(temp_student.dat_path) << data_faces;
     cap.release();
     cv::destroyAllWindows() ;
-
     return 0;
 }
-

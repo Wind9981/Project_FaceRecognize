@@ -1,15 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
-/*
-#include <unistd.h>
-#include <cppconn/driver.h>
-#include <cppconn/exception.h>
-#include <cppconn/resultset.h>
-#include <cppconn/statement.h>
-#include <cppconn/prepared_statement.h>
-*/
-#include "student.hpp"
 #include <dlib/dnn.h>
 #include <dlib/gui_widgets.h>
 #include <dlib/clustering.h>
@@ -20,11 +11,10 @@
 #include <dlib/image_processing.h>
 #include <map>
 #include <string>
-#include "UltraFace/UltraFace.hpp"
 #include <fstream>
-#include <experimental/filesystem>  
-
-
+#include <experimental/filesystem>
+#include "../header/student.hpp"
+#include "../header/UltraFace.hpp"
 #include <math.h>
 
 using namespace dlib;
@@ -78,8 +68,7 @@ int main()
     student temp_student;
     std::vector<student> temp_lst;
     std::vector<std::string> std_list;
-    std::map<std::string, dlib::matrix<float,0,1>> data_faces;
-
+    std::map<std::string, dlib::matrix<float, 0, 1>> data_faces;
     if (fs::exists("../list/studentList.txt"))
     {
         f.open("../list/studentList.txt", ios::in);
@@ -93,8 +82,8 @@ int main()
         for (int i = 0; i < std_list.size(); i += 4)
         {
             temp_student.student_id = std_list[i];
-            temp_student.student_name = std_list[i+1];
-            temp_student.dat_path = std_list[i+2];
+            temp_student.student_name = std_list[i + 1];
+            temp_student.dat_path = std_list[i + 2];
             temp_student.checked = 0;
             if (fs::exists(temp_student.dat_path))
             {
@@ -102,53 +91,30 @@ int main()
             }
             else
             {
-                std::cout<<"Data couldn't be found. Please check list and dat folder"<<std::endl;
+                std::cout << "Data couldn't be found. Please check list and dat folder" << std::endl;
                 return 0;
             }
             temp_student.student_features = data_faces[temp_student.student_id];
             temp_lst.push_back(temp_student);
-            
         }
-        /*
-        std::cout<<temp_lst[0].student_id<<std::endl;
-        std::cout<<temp_lst[0].student_name<<std::endl;
-        std::cout<<temp_lst[0].dat_path<<std::endl;
-        std::cout<<temp_lst[0].checked<<std::endl;
-        std::cout<<temp_lst[0].student_features<<std::endl;
-        */
     }
-
-    
     const std::string gst_pipeline = "v4l2src ! image/jpeg, width = 1280, height = 720, framerate=60/1 ! jpegdec ! videoconvert ! appsink";
     cv::VideoCapture cap(gst_pipeline, cv::CAP_GSTREAMER);
     if (!cap.isOpened())
     {
-
         std::cout << "Failed to open camera." << std::endl;
-
         return (-1);
     }
-
     shape_predictor sp;
-    deserialize("/home/nhan/data/shape_predictor_68_face_landmarks.dat") >> sp;
-
+    deserialize("../Model/shape_predictor_68_face_landmarks.dat") >> sp;
     anet_type net;
-    deserialize("/home/nhan/data/dlib_face_recognition_resnet_model_v1.dat") >> net;
-
+    deserialize("../Model/dlib_face_recognition_resnet_model_v1.dat") >> net;
     student temp_std;
-
-    UltraFace ultraface("RFB-320.bin", "RFB-320.param", 426, 240, 2, 0.82);
-    //image_window win;
+    UltraFace ultraface("../Model/RFB-320.bin", "../Model/RFB-320.param", 426, 240, 2, 0.82);
     std::vector<matrix<rgb_pixel>> faces;
-
-    std::cout << "Hit ESC to exit"
-              << "\n"
-              << endl;
-
     cv::Mat img;
     cv::namedWindow("Detect", cv::WINDOW_AUTOSIZE);
     std::chrono::time_point<std::chrono::system_clock> m_StartTime = std::chrono::system_clock::now();
-
     while (true)
     {
         if (!cap.read(img))
@@ -169,10 +135,8 @@ int main()
         m_StartTime = std::chrono::system_clock::now();
         cv::Mat image_clone = img.clone();
         ncnn::Mat inmat = ncnn::Mat::from_pixels(image_clone.data, ncnn::Mat::PIXEL_BGR2RGB, image_clone.cols, image_clone.rows);
-
         std::vector<FaceInfo> face_info;
         ultraface.detect(inmat, face_info);
-
         cv_image<bgr_pixel> cimg(img);
         matrix<rgb_pixel> matrix;
         assign_image(matrix, cimg);
@@ -181,7 +145,6 @@ int main()
         {
             auto face = face_info[i];
             rectangle rect(point(face.x1, face.y1), point(face.x2, face.y2));
-
             auto shape = sp(matrix, rect);
             dlib::matrix<rgb_pixel> face_chip;
             extract_image_chip(matrix, get_face_chip_details(shape, 150, 0.25), face_chip);
@@ -192,10 +155,8 @@ int main()
             temp_obj.Avg_value = 0.16f;
             temp_obj.Bound_style = cv::Scalar(0, 0, 255);
             temp_obj.check_index = -1;
-
             for (int j = 0; j < temp_lst.size(); j++)
             {
-
                 if ((length(face_descriptors[0] - temp_lst[j].student_features) * length(face_descriptors[0] - temp_lst[j].student_features)) < temp_obj.Avg_value)
                 {
                     temp_obj.Avg_value = length(face_descriptors[0] - temp_lst[j].student_features) * length(face_descriptors[0] - temp_lst[j].student_features);
@@ -215,10 +176,8 @@ int main()
                 break;
             faces.clear();
         }
-
         if (cv::waitKey(1) >= 0)
             break;
-        //cout << "Detection delay: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_StartTime).count() << endl;
     }
     for (int i = 0; i < temp_lst.size(); i++)
     {

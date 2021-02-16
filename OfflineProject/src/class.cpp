@@ -1,4 +1,4 @@
-#include "class.hpp"
+#include "../header/class.hpp"
 id_class::id_class()
 {
 }
