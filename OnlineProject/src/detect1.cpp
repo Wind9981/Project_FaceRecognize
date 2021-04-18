@@ -10,8 +10,8 @@
 #include <cppconn/prepared_statement.h>
 #include <iostream>
 #include <vector>
-#include "class.hpp"
-#include "student.hpp"
+#include "../header/class.hpp"
+#include "../header/student.hpp"
 #include <dlib/dnn.h>
 #include <dlib/gui_widgets.h>
 #include <dlib/clustering.h>
@@ -22,7 +22,7 @@
 #include <dlib/image_processing.h>
 #include <map>
 #include <string>
-#include "UltraFace/UltraFace.hpp"
+#include "../header/UltraFace.hpp"
 #include <fstream>
 #include <experimental/filesystem>
 #include <math.h>
@@ -101,8 +101,9 @@ int main()
     {
         date = get_date();
         myDriver = get_driver_instance();
-        myConn = myDriver->connect("tcp://156.67.222.106:3306", "u477501821_duyle", "Duyle22697");
-        myConn->setSchema("u477501821_diemdanhuit");
+        /*  IP, Port, Account, Password and DataBaseName is get from DB and server    */
+        myConn = myDriver->connect("tcp://IP:Port", "Account", "PassWord");
+        myConn->setSchema("DataBaseName");
         myStmt = myConn->createStatement();
         myRes = myStmt->executeQuery("SELECT tkb_day.id_tkb, tkb_day.date, tkb_day.start ,tkb_day.end, class.id_class, class.name_class FROM tkb_day LEFT JOIN class ON tkb_day.id_class = class.id_class WHERE tkb_day.date ='" + date + "';");
         while (myRes->next())
@@ -152,11 +153,11 @@ int main()
             temp_lst[i].student_features = data_faces[temp_lst[i].student_id];
         }
         shape_predictor sp;
-        deserialize("/home/nhan/data/shape_predictor_68_face_landmarks.dat") >> sp;
+        deserialize("../../Model/shape_predictor_68_face_landmarks.dat") >> sp;
         anet_type net;
-        deserialize("/home/nhan/data/dlib_face_recognition_resnet_model_v1.dat") >> net;
+        deserialize("../../Model/dlib_face_recognition_resnet_model_v1.dat") >> net;
         student temp_std;
-        UltraFace ultraface("RFB-320.bin", "RFB-320.param", 426, 240, 2, 0.82);
+        UltraFace ultraface("../../Model/RFB-320.bin", "../../Model/RFB-320.param", 426, 240, 2, 0.82);
         std::vector<matrix<rgb_pixel>> faces;
         cv::Mat img;
         cv::namedWindow("Detect", cv::WINDOW_AUTOSIZE);
@@ -227,8 +228,8 @@ int main()
             if (update_cycle > 100)
             {
                 myDriver = get_driver_instance();
-                myConn = myDriver->connect("tcp://156.67.222.106:3306", "u477501821_duyle", "Duyle22697");
-                myConn->setSchema("u477501821_diemdanhuit");
+                myConn = myDriver->connect("tcp://IP:Port", "Account", "PassWord");
+                myConn->setSchema("DataBaseName");
                 myStmt = myConn->createStatement();
                 for (int i = 0; i < temp_lst.size(); i++)
                 {

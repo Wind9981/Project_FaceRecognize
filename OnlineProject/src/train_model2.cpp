@@ -10,7 +10,7 @@
 #include <dlib/image_processing.h>
 #include <experimental/filesystem>
 #include <map>
-#include "student.hpp"
+#include "../header/student.hpp"
 #include <string.h>
 #include <fstream>
 
